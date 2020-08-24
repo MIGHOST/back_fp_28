@@ -167,7 +167,7 @@ class AuthController {
       }
 
       await userModel.verifyUser(userToVerify._id);
-      res.redirect('https://wallet-fp-28.netlify.app/login') ;
+      res.redirect('https://wallet-fp-28.netlify.app/login');
       return res.status(200).send('Your mail successfully verified');
     } catch (error) {
       res.status(500).send('Server error');
