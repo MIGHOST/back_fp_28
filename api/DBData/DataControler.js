@@ -41,6 +41,7 @@ async function postTransaction(req, res, next) {
     };
 
     const newTransaction = await transactionModel.create(transaction);
+    const totalUserBalance = await updateTotalBalance(_id);
 
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
@@ -50,6 +51,7 @@ async function postTransaction(req, res, next) {
             _id: newTransaction._id,
           },
         },
+        userBalance: totalUserBalance,
       },
       {
         new: true,
@@ -72,8 +74,11 @@ async function deleteTransaction(req, res, next) {
     );
 
     if (!removedTransaction) {
-      return res.status(404).send();
+      return res.status(404).send('transaction not found');
     }
+    await UpdateBalance(_id);
+    const totalUserBalance = await updateTotalBalance(_id);
+
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
       {
@@ -82,13 +87,14 @@ async function deleteTransaction(req, res, next) {
             _id: transactionId,
           },
         },
+        userBalance: totalUserBalance,
       },
       {
         new: true,
       },
     );
-    UpdateBalance(_id);
-    return res.status(204).send(updatedUser);
+
+    return res.status(200).send(updatedUser);
   } catch (error) {
     next(error);
   }
@@ -96,7 +102,8 @@ async function deleteTransaction(req, res, next) {
 
 async function updateTransaction(req, res, next) {
   try {
-    const { transactionId, userId } = req.body;
+    const { transactionId } = req.body;
+    const { _id } = req.user;
 
     const { date, type, category, sum, comment } = req.body;
     const newTransaction = {
@@ -114,7 +121,18 @@ async function updateTransaction(req, res, next) {
     );
     await UpdateBalance(userId);
 
-    res.status(200).send('transaction updated');
+    const totalUserBalance = await updateTotalBalance(_id);
+    const updatedUser = await userModel.findByIdAndUpdate(
+      _id,
+      {
+        userBalance: totalUserBalance,
+      },
+      {
+        new: true,
+      },
+    );
+
+    res.status(200).json(updatedUser);
   } catch (error) {
     console.log('Error', error);
   }
@@ -189,6 +207,21 @@ async function UpdateBalance(userId) {
   } catch (error) {
     console.log(error);
   }
+}
+async function updateTotalBalance(userId) {
+  const transactions = await transactionModel
+    .find({ userOwner: userId })
+    .exec();
+
+  const totalBalance = transactions.reduce((acc, transaction) => {
+    if (transaction.type === '-') {
+      acc -= transaction.sum;
+    } else {
+      acc += transaction.sum;
+    }
+    return acc;
+  }, 0);
+  return totalBalance;
 }
 
 module.exports = {
