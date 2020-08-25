@@ -8,6 +8,7 @@ const cors = require('cors');
 const { PORT, DB_URI } = process.env;
 const { authRouter } = require('./auth/auth.router');
 const { transactionRouter } = require('./DBData/route');
+const { userRouter } = require('./user/user.router');
 
 exports.AuthServer = class {
   constructor() {
@@ -52,6 +53,7 @@ exports.AuthServer = class {
   }
 
   initRoutes() {
+    this.app.use('/user', userRouter);
     this.app.use('/auth', authRouter);
     this.app.use('/', transactionRouter);
   }
