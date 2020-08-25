@@ -1,10 +1,13 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({
+  path: path.join(__dirname, '.env'),
+});
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { PORT, DB_URI } = process.env;
 const { authRouter } = require('./auth/auth.router');
+const { transactionRouter } = require('./DBData/route');
 
 exports.AuthServer = class {
   constructor() {
@@ -36,7 +39,12 @@ exports.AuthServer = class {
       cors({
         origin: [
           'http://localhost:3000',
+          'http://localhost:300',
+          'https://wallet-fp-28.netlify.app',
+          'https://wallet-fp-28.netlify.app/auth/login',
+          'https://wallet-fp-28.netlify.app/auth/register',
           'https://alexeyshalkevych.github.io',
+          'http://finalproject2020.zzz.com.ua',
           'https://alexeyshalkevych.github.io/test-project-auth/',
         ],
       }),
@@ -45,6 +53,7 @@ exports.AuthServer = class {
 
   initRoutes() {
     this.app.use('/auth', authRouter);
+    this.app.use('/', transactionRouter);
   }
 
   initErrorHandler() {

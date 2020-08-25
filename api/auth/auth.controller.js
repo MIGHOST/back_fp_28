@@ -45,6 +45,7 @@ class AuthController {
       return res.status(201).send({
         email: user.email,
         name: user.name,
+        id: user._id,
         status: user.status,
         verificationToken: user.verificationToken,
       });
@@ -74,8 +75,10 @@ class AuthController {
       });
       res.status(200).json({
         email: userWithToken.email,
-        subscription: userWithToken.subscription,
+        name: userWithToken.name,
+        id: userWithToken._id,
         token: newToken,
+        transactions: userWithToken.transactions,
       });
     } catch (error) {
       res.status(500).send('Server error');
@@ -86,9 +89,9 @@ class AuthController {
     try {
       const { accessToken } = req.body;
 
-      const userInfoResposne = await getUserInfoFromGoogle(accessToken);
+      const userInfoResponse = await getUserInfoFromGoogle(accessToken);
 
-      const { email, sub, name } = userInfoResposne;
+      const { email, sub, name } = userInfoResponse;
 
       const user = await userModel.initUserFromGoogle(email, name, sub);
 
@@ -100,8 +103,11 @@ class AuthController {
       await user.save();
 
       return res.status(201).json({
+        email: user.email,
+        name: user.name,
+        id: user._id,
         token: newToken,
-        user,
+        transactions: user.transactions,
       });
     } catch (error) {
       return res.status(500).send('Server error');
@@ -112,9 +118,9 @@ class AuthController {
     try {
       const { accessToken } = req.body;
 
-      const userInfoResposne = await getUserInfoFromFacebook(accessToken);
+      const userInfoResponse = await getUserInfoFromFacebook(accessToken);
 
-      const { email, id, name } = userInfoResposne;
+      const { email, id, name } = userInfoResponse;
 
       const user = await userModel.initUserFromFacebook(email, name, id);
 
@@ -126,8 +132,11 @@ class AuthController {
       await user.save();
 
       return res.status(201).json({
+        email: user.email,
+        name: user.name,
+        id: user._id,
         token: newToken,
-        user,
+        transactions: user.transactions,
       });
     } catch (error) {
       return res.status(500).send('Server error');
@@ -154,11 +163,11 @@ class AuthController {
       );
 
       if (!userToVerify) {
-        return console.log('test');
+        return console.log('test'); //змінити на throw Error
       }
 
       await userModel.verifyUser(userToVerify._id);
-      // res.redirect('Login_page') ;
+      res.redirect('https://wallet-fp-28.netlify.app/login');
       return res.status(200).send('Your mail successfully verified');
     } catch (error) {
       res.status(500).send('Server error');

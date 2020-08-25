@@ -1,12 +1,20 @@
 const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
-// const { sault } = require('../config');
+const { number } = require('yargs');
 
 const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: false },
   name: { type: String, required: true, unique: true },
   token: { type: String, required: false },
+  transaction: [
+    {
+      type: {
+        type: Schema.Types.ObjectId,
+        ref: 'TransactionData',
+      },
+    },
+  ],
   status: {
     type: String,
     required: true,
@@ -16,8 +24,9 @@ const userSchema = new Schema({
   verificationToken: { type: String, required: false },
   googleId: { type: String, required: false },
   facebookId: { type: String, required: false },
+  userBalance: { type: Number, required: false },
 });
-userSchema.static('updateUser', async function (id, updateParams) {
+userSchema.static('updateUser', async function(id, updateParams) {
   const user = await this.findById(id);
   if (!user) throw new Error('User not found');
 
@@ -28,7 +37,7 @@ userSchema.static('updateUser', async function (id, updateParams) {
   return user.save();
 });
 
-userSchema.static('initUserFromGoogle', async function (email, name, googleId) {
+userSchema.static('initUserFromGoogle', async function(email, name, googleId) {
   const user = await this.findOne({ googleId });
 
   if (user) return user;
@@ -40,7 +49,7 @@ userSchema.static('initUserFromGoogle', async function (email, name, googleId) {
   });
 });
 
-userSchema.static('initUserFromFacebook', async function (
+userSchema.static('initUserFromFacebook', async function(
   email,
   name,
   facebookId,
@@ -56,15 +65,13 @@ userSchema.static('initUserFromFacebook', async function (
   });
 });
 
-userSchema.static('findByVerificationToken', async function (
-  verificationToken,
-) {
+userSchema.static('findByVerificationToken', async function(verificationToken) {
   return this.findOne({
     verificationToken,
   });
 });
 
-userSchema.static('verifyUser', async function (id) {
+userSchema.static('verifyUser', async function(id) {
   return this.findByIdAndUpdate(
     id,
     {
@@ -76,7 +83,6 @@ userSchema.static('verifyUser', async function (id) {
     },
   );
 });
-
 
 const userModel = mongoose.model('User', userSchema);
 module.exports = userModel;
