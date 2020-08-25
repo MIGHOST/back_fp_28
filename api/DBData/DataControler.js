@@ -135,7 +135,7 @@ async function updateTransaction(req, res, next) {
       },
     );
 
-    res.status(200).send(transactionUpdate, updatedUser.userBalance); 
+    res.status(200).send(transactionUpdate, updatedUser.userBalance);
   } catch (error) {
     console.log('Error', error);
   }

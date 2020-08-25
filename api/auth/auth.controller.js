@@ -79,6 +79,8 @@ class AuthController {
         id: userWithToken._id,
         token: newToken,
         transactions: userWithToken.transactions,
+        userBalance: user.userBalance,
+        status: user.status
       });
     } catch (error) {
       res.status(500).send('Server error');
@@ -108,6 +110,8 @@ class AuthController {
         id: user._id,
         token: newToken,
         transactions: user.transactions,
+        userBalance: user.userBalance,
+        status: user.status
       });
     } catch (error) {
       return res.status(500).send('Server error');
@@ -137,6 +141,8 @@ class AuthController {
         id: user._id,
         token: newToken,
         transactions: user.transactions,
+        userBalance: user.userBalance,
+        status: user.status
       });
     } catch (error) {
       return res.status(500).send('Server error');
