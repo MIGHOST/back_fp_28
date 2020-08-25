@@ -17,6 +17,35 @@ async function getTransaction(req, res, next) {
   }
 }
 
+async function getTransactionForStatistic(req, res) {
+  try {
+      let { type, month, year } = req.params;
+      const dateNow = new Date();
+      if (month === undefined){
+          month = dateNow.getMonth() + 1;
+      };
+      if (year === undefined){
+          year = dateNow.getFullYear();
+      };
+      if (type === undefined){
+          type = "-"
+      }
+      const { _id } = req.user;
+
+      const user = await transactionModel
+        .find({
+          userOwner: _id,
+        })
+        .exec();
+
+      const filterUser = filterBalance(type, month, year, user)
+
+      res.status(200).send(filterUser);
+    } catch (error) {
+      console.log(error);
+    }
+}
+
 async function postTransaction(req, res, next) {
   try {
     const { date, type, category, sum, comment } = req.body;
@@ -226,10 +255,87 @@ async function updateTotalBalance(userId) {
   }, 0);
   return totalBalance;
 }
+function filterBalance(globalType, month, year, arr){
+  function unique(arr) {
+      let result = [];
+      let newResult = [];
+      arr.forEach(el => {if(!result.includes(el.join(','))) {
+          result.push(el.join(','))
+      }});
+      result.forEach(el => newResult.push(el.split(",")))
+      return newResult;
+  };
+  function getMonth (date){
+      const month = Number(date.slice(3,5));
+      return month
+  };
+  function getYear (date){
+      const year = Number(date.slice(6,10));
+      return year
+  };
+  function getBalanceAll (value) {
+      const ArrCategory = arr.filter(el => 
+          el.type === value &&
+          getMonth(el.date) === month &&
+          getYear(el.date) === year
+      );
+      return ArrCategory.reduce((acc, el) => {
+          return acc + el['sum']
+      }, 0)
+  };
+  function getBalanceArray (value) {
+      const ArrCategory = arr.filter(el => 
+          el.category === value[0] && el.type === value[1] &&
+          getMonth(el.date) === month &&
+          getYear(el.date) === year
+      );
+      return ArrCategory.reduce((acc, val) => {
+          if(value[1] === globalType) {
+              if(month === getMonth(val["date"]) && year === getYear(val["date"])){
+                  return acc + val['sum']
+              }
+          } else if("all" === globalType){
+              if(month === getMonth(val["date"]) && year === getYear(val["date"])){
+                  return acc + val['sum']
+              }
+          };
+          return acc + val['sum']
+      }, 0)
+  };
+  const category = arr.reduce((acc, val) => {
+      if(val.type === globalType) {
+          if(month === getMonth(val["date"]) && year === getYear(val["date"])){
+              acc.push([val.category, val.type])
+          }
+      } else if("all" === globalType){
+          if(month === getMonth(val["date"]) && year === getYear(val["date"])){
+              acc.push([val.category, val.type])
+          }
+      };
+      return unique(acc)
+  },[]);
+  const arrayCategory = category.reduce((acc, el) => {
+      acc.push({
+          "category": el[0],
+          "type": el[1],
+          "sum": getBalanceArray(el),
+      });
+      return acc
+  },[]);
+  const profit = getBalanceAll("+");
+  const exes = getBalanceAll("-");
+  const finalObject = {
+      "arr": arrayCategory,
+      "income": profit,
+      "expenses": exes,
+  };
+  return finalObject
+}
 
 module.exports = {
   getTransaction,
   postTransaction,
   deleteTransaction,
   updateTransaction,
+  getTransactionForStatistic
 };
