@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
-const { number } = require('yargs');
+
 
 const userSchema = new Schema({
   email: { type: String, required: true, unique: true },

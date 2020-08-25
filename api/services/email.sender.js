@@ -13,7 +13,7 @@ exports.SendVerificationMail = async (verificationToken, email) => {
     from: 'mih.s.sidorenko@gmail.com',
     subject: 'Verification',
     text: 'Verify your email',
-    html: `<a href="https://powerful-waters-91620.herokuapp.com/auth/verify/${verificationToken}">Confirm your account</a>`, //посилання на хіроку де лежить бекенд
+    html: `<a href="https://powerful-waters-91620.herokuapp.com/auth/verify/${verificationToken}">Confirm your account</a>`, 
   };
   return await sgMail.send(msg);
 };
