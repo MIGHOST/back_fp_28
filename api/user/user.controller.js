@@ -3,8 +3,8 @@ const userModel = require('./user.model');
 class UserController {
   async getUsers(req, res) {
     try {
-      const {token} = req.user;
-      const user = await userModel.find({token});
+      const { token } = req.user;
+      const user = await userModel.find({ token });
       if (!user) {
         return res.status(400).send({ message: 'User not founded' });
       }
@@ -13,8 +13,6 @@ class UserController {
       res.status(500).send('Server error');
     }
   }
-
-
 }
 
 module.exports = new UserController();
