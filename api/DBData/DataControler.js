@@ -24,6 +24,7 @@ async function getTransactionDateFillter(req, res, next) {
         const {
             _id
         } = req.user;
+
         const dateString = dateToString()
 
         const user = await transactionModel
