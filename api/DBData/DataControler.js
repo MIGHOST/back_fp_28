@@ -20,6 +20,8 @@ async function getTransaction(req, res, next) {
 async function getTransactionForStatistic(req, res) {
   try {
       let { type, month, year } = req.query;
+      month = Number(month);
+      year = Number(year);
       const dateNow = new Date();
       if (month === undefined){
           month = dateNow.getMonth() + 1;
