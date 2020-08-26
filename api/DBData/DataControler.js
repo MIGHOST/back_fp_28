@@ -59,8 +59,8 @@ async function postTransaction(req, res, next) {
   try {
     const { date, type, category, sum, comment } = req.body;
     const { _id } = req.user;
-    if(!req.body){
-       res.status(400).send('Transaction data missing')
+    if (!req.body) {
+      res.status(400).send('Transaction data missing');
     }
 
     const user = await transactionModel
@@ -73,8 +73,8 @@ async function postTransaction(req, res, next) {
     }
 
     const lastUser = user[user.length - 1];
-    if(!type){
-      res.status(400).send('Type of transaction missing')
+    if (!type) {
+      res.status(400).send('Type of transaction missing');
     }
     const balance = balanceLastTransaction(lastUser, type, sum);
 
@@ -141,7 +141,7 @@ async function deleteTransaction(req, res, next) {
         new: true,
       },
     );
-   
+
     return res.status(200).send(updatedUser);
   } catch (error) {
     next(error);
@@ -156,8 +156,8 @@ async function updateTransaction(req, res, next) {
     const oldTransaction = await transactionModel.findOne({
       _id: transactionId,
     });
-    if(!oldTransaction){
-      res.status(404).send('Transaction not found')
+    if (!oldTransaction) {
+      res.status(404).send('Transaction not found');
     }
 
     const newTransaction = {
@@ -188,7 +188,7 @@ async function updateTransaction(req, res, next) {
 
     res.status(200).send(transactionUpdate);
   } catch (error) {
-   next(error);
+    next(error);
   }
 }
 
@@ -266,9 +266,12 @@ async function updateTotalBalance(userId) {
   const transactions = await transactionModel
     .find({ userOwner: userId })
     .exec();
-
   const totalBalance = transactions.reduce((acc, transaction) => {
+    if (transaction.type === '-') {
+      acc -= transaction.sum;
+    } else {
       acc += transaction.sum;
+    }
     return acc;
   }, 0);
   return totalBalance;
