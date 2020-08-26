@@ -113,39 +113,21 @@ async function postTransaction(req, res, next) {
 }
 
 async function deleteTransaction(req, res, next) {
-  try {
-    const { transactionId } = req.body;
-    const { _id } = req.user;
+    try {
+        const {
+            transactionId
+        } = req.body;
+        const {
+            _id
+        } = req.user;
 
-    const removedTransaction = await transactionModel.findByIdAndDelete(
-      transactionId,
-    );
+        const removedTransaction = await transactionModel.findByIdAndDelete(
+            transactionId,
+        );
 
     if (!removedTransaction) {
       return res.status(404).send('Transaction not found');
     }
-    await UpdateBalance(_id);
-    const totalUserBalance = await updateTotalBalance(_id);
-
-    const updatedUser = await userModel.findByIdAndUpdate(
-      _id,
-      {
-        $pull: {
-          transaction: {
-            _id: transactionId,
-          },
-        },
-        userBalance: totalUserBalance,
-      },
-      {
-        new: true,
-      },
-    );
-
-    return res.status(200).send(updatedUser);
-  } catch (error) {
-    next(error);
-  }
 }
 
 async function updateTransaction(req, res, next) {
@@ -193,74 +175,74 @@ async function updateTransaction(req, res, next) {
 }
 
 function balanceLastTransaction(lastTransaction, type, sum) {
-  switch (type) {
-    case '+':
-      if (lastTransaction == undefined) {
-        return +sum;
-      }
-      return (lastTransaction.balance += sum);
-    case '-':
-      if (lastTransaction.balance === undefined) {
-        return -sum;
-      }
-      return (lastTransaction.balance -= sum);
-    default:
-      return console.log('not type');
-  }
+    switch (type) {
+        case '+':
+            if (lastTransaction == undefined) {
+                return +sum;
+            }
+            return (lastTransaction.balance += sum);
+        case '-':
+            if (lastTransaction.balance === undefined) {
+                return -sum;
+            }
+            return (lastTransaction.balance -= sum);
+        default:
+            return console.log('not type');
+    }
 }
 
 async function UpdateBalance(userId) {
-  try {
-    const user = await transactionModel
-      .find({
-        userOwner: userId,
-      })
-      .exec();
+    try {
+        const user = await transactionModel
+            .find({
+                userOwner: userId,
+            })
+            .exec();
 
-    user.map(async el => {
-      const prev = user.indexOf(el);
+        user.map(async el => {
+            const prev = user.indexOf(el);
 
-      if (prev === 0) {
-        switch (el.type) {
-          case '+':
-            el.balance = 0 + el.sum;
+            if (prev === 0) {
+                switch (el.type) {
+                    case '+':
+                        el.balance = 0 + el.sum;
 
-            const updateEl = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
+                        const updateEl = await transactionModel.findByIdAndUpdate(el._id, {
+                            balance: el.balance,
+                        });
 
-            return;
-          case '-':
-            el.balance = 0 - el.sum;
-            const updateE = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            return;
-          default:
-            return console.log('not type');
-        }
-      } else {
-        switch (el.type) {
-          case '+':
-            user[prev].balance = user[prev - 1].balance += el.sum;
-            const updateEl1 = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            return;
-          case '-':
-            user[prev].balance = user[prev - 1].balance -= el.sum;
-            const updateEl2 = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            return;
-          default:
-            return console.log('not type');
-        }
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
+                        return;
+                    case '-':
+                        el.balance = 0 - el.sum;
+                        const updateE = await transactionModel.findByIdAndUpdate(el._id, {
+                            balance: el.balance,
+                        });
+                        return;
+                    default:
+                        return console.log('not type');
+                }
+            } else {
+                switch (el.type) {
+                    case '+':
+                        user[prev].balance = user[prev - 1].balance += el.sum;
+                        const updateEl1 = await transactionModel.findByIdAndUpdate(el._id, {
+                            balance: el.balance,
+                        });
+                        return;
+                    case '-':
+                        user[prev].balance = user[prev - 1].balance -= el.sum;
+                        const updateEl2 = await transactionModel.findByIdAndUpdate(el._id, {
+                            balance: el.balance,
+                        });
+                        return;
+                    default:
+                        return console.log('not type');
+                }
+            }
+        });
+    } catch (error) {
+        console.log(error);
+    }
 }
 async function updateTotalBalance(userId) {
   const transactions = await transactionModel
@@ -272,9 +254,12 @@ async function updateTotalBalance(userId) {
     } else {
       acc += transaction.sum;
     }
-    return acc;
-  }, 0);
-  return totalBalance;
+    const arr = []
+    arr.push(date)
+    arr.push(month)
+    arr.push(year)
+    const string = arr.join('/')
+    return string
 }
 function filterBalance(globalType, month, year, arr) {
   function unique(arr) {
@@ -359,9 +344,18 @@ function filterBalance(globalType, month, year, arr) {
 }
 
 module.exports = {
+<<<<<<< HEAD
   getTransaction,
   postTransaction,
   deleteTransaction,
   updateTransaction,
   getTransactionForStatistic,
 };
+=======
+    getTransaction,
+    postTransaction,
+    deleteTransaction,
+    updateTransaction,
+    getTransactionDateFillter
+};
+>>>>>>> origin/B8-1
