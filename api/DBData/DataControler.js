@@ -23,7 +23,7 @@ async function getTransactionDateFillter(req, res, next) {
     try {
         const {
             _id
-        } = req.body;
+        } = req.user;
         const dateString = dateToString()
 
         const user = await transactionModel
