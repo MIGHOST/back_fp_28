@@ -152,8 +152,7 @@ class AuthController {
   async logoutUser(req, res) {
     try {
       const { user } = req;
-      await userModel.findByIdAndUpdate(user._id, { token: null });
-      // res.redirect('Login_page') ;
+      await userModel.findByIdAndUpdate(user._id, { token: null });     
       return res.status(204).send();
     } catch (error) {
       res.status(500).send('Server error');
@@ -169,7 +168,7 @@ class AuthController {
       );
 
       if (!userToVerify) {
-        return console.log('test'); //змінити на throw Error
+        return console.log('test'); 
       }
 
       await userModel.verifyUser(userToVerify._id);
