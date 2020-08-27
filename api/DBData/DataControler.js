@@ -89,9 +89,7 @@ async function postTransaction(req, res, next) {
       },
     );
 
-    const sendUser = [updatedUser, newTransaction._id];
-
-    res.status(201).send(sendUser);
+    res.status(201).send(updatedUser);
   } catch (error) {
     next(error);
   }
