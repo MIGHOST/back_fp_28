@@ -320,4 +320,5 @@ module.exports = {
   deleteTransaction,
   updateTransaction,
   getTransactionDateFillter,
+  getTransactionForStatistic
 };
