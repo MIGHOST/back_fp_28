@@ -7,6 +7,7 @@ const {
   getUserInfoFromFacebook,
 } = require('../services/auth.services');
 const { SendVerificationMail } = require('../services/email.sender');
+// const errorHandler = require('../helper/errors.constructors');
 
 class AuthController {
   async registerUser(req, res) {
@@ -80,7 +81,7 @@ class AuthController {
         token: newToken,
         transactions: userWithToken.transactions,
         userBalance: user.userBalance,
-        status: user.status
+        status: user.status,
       });
     } catch (error) {
       res.status(500).send('Server error');
@@ -111,7 +112,7 @@ class AuthController {
         token: newToken,
         transactions: user.transactions,
         userBalance: user.userBalance,
-        status: user.status
+        status: user.status,
       });
     } catch (error) {
       return res.status(500).send('Server error');
@@ -142,7 +143,7 @@ class AuthController {
         token: newToken,
         transactions: user.transactions,
         userBalance: user.userBalance,
-        status: user.status
+        status: user.status,
       });
     } catch (error) {
       return res.status(500).send('Server error');
