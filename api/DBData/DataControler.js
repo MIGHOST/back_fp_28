@@ -56,38 +56,43 @@ async function getTransactionForStatistic(req, res) {
     }
   }
 
-
-async function getTransactionDateFillter(req, res, next) {
-  try {
-    const { _id } = req.user;
-    const user = await transactionModel
-      .find({
-        userOwner: _id,
-      })
-      .exec();
-
-    const userDateFilter = user.sort((a, b) => {
-      const stringA = a.date.split('/').reverse().join(',');
-      const stringB = b.date.split('/').reverse().join(' ');
-      let dateA = new Date(stringA);
-      let dateB = new Date(stringB);
-
-      return dateA - dateB;
-    });
-
-    await UpdateBalance2(userDateFilter);
-    const transactions = await transactionModel
-      .find({
-        userOwner: _id,
-      })
-      .exec();
-
-    res.status(200).send(transactions);
-  } catch (error) {
-    console.log(error);
+  async function getTransactionForStatistic(req, res) {
+    try {
+        let { type, month, year } = req.query;
+        month = Number(month);
+        year = Number(year);
+        if(Number.isNaN(month) || Number.isNaN(year)) {
+          res.status(400).send({ message: "Bad request: month and year must be a number"})
+        }
+        if(month > 12) {
+          res.status(400).send({ message: "Bad request: uncorrect month"})
+        }
+        const dateNow = new Date();
+        if (month === undefined){
+            month = dateNow.getMonth() + 1;
+        };
+        if (year === undefined){
+            year = dateNow.getFullYear();
+        };
+        if (type === undefined){
+            type = "-"
+        }
+        const { _id } = req.user;
+  
+        const user = await transactionModel
+          .find({
+            userOwner: _id,
+          })
+          .exec();
+  
+        const filterUser = filterBalance(type, month, year, user)
+  
+        res.status(200).send(filterUser);
+      } catch (error) {
+        console.log(error);
+      }
   }
-}
-
+  
 async function postTransaction(req, res, next) {
   try {
     const { date, type, category, sum, comment } = req.body;
