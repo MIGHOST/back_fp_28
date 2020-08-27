@@ -74,12 +74,19 @@ async function postTransaction(req, res, next) {
   try {
     const { date, type, category, sum, comment } = req.body;
     const { _id } = req.user;
+    if (!req.body) {
+      res.status(400).send('Transaction data missing');
+    }
 
     const user = await transactionModel
       .find({
         userOwner: _id,
       })
       .exec();
+      if (!user) {
+        res.status(404).send('Transactions not found');
+      }
+  
     const lastUser = user[user.length - 1];
     if (!type) {
       res.status(400).send('Type of transaction missing');
