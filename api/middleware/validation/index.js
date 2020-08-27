@@ -24,7 +24,7 @@ function userValidation(req, res, next) {
         message: `Password is not valid. Must have: ${
           isPassValidNumber ? '' : 'one or more number; '
         }${isPassValidString ? '' : 'two or more letter - upper and lower; '}${
-          isPassValidSymbol ? '' : 'one of special symbol; '
+          isPassValidSymbol ? '' : `one of special symbol like # @ ₴ ? $ 0  `
         }${isPassValidLength ? '' : 'password length is more then 6 symbol;'}`,
       });
   } else if (name !== undefined) {
