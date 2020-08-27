@@ -81,6 +81,9 @@ async function postTransaction(req, res, next) {
       })
       .exec();
     const lastUser = user[user.length - 1];
+    if (!type) {
+      res.status(400).send('Type of transaction missing');
+    }
     const balance = balanceLastTransaction(lastUser, type, sum);
 
     const transaction = {
