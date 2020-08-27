@@ -6,7 +6,8 @@ const {
   updateTransaction,
   getTransactionForStatistic,
   updateTransaction,
-  getTransactionDateFillter
+  getTransactionDateFillter,
+  getTransactionForStatistic
 } = require('./DataControler');
 const { tokenMiddleware } = require('../middleware/auth.middleware');
 
