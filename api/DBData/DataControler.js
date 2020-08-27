@@ -19,65 +19,64 @@ async function getTransaction(req, res, next) {
 
 async function getTransactionDateFillter(req, res, next) {
   try {
-      const {
-          _id
-      } = req.user;
-            const user = await transactionModel
-          .find({
-              userOwner: _id,
-          })
-          .exec();
+    const { _id } = req.user;
+    const user = await transactionModel
+      .find({
+        userOwner: _id,
+      })
+      .exec();
 
-      const userDateFilter = user.sort((a, b) => {
-          const stringA = a.date.split('/').reverse().join(',')
-          const stringB = b.date.split('/').reverse().join(' ')
-          let dateA = new Date(stringA)
-          let dateB = new Date(stringB)
+    const userDateFilter = user.sort((a, b) => {
+      const stringA = a.date.split('/').reverse().join(',');
+      const stringB = b.date.split('/').reverse().join(' ');
+      let dateA = new Date(stringA);
+      let dateB = new Date(stringB);
 
-          return dateA - dateB
-      });
+      return dateA - dateB;
+    });
 
-      res.status(200).send(userDateFilter);
+    res.status(200).send(userDateFilter);
   } catch (error) {
-      console.log(error);
-  }}
-
-
-
-
-
-
-
-
-
-
+    console.log(error);
+  }
+}
 async function getTransactionForStatistic(req, res) {
   try {
-      let { type, month, year } = req.query;
-      const dateNow = new Date();
-      if (month === undefined){
-          month = dateNow.getMonth() + 1;
-      };
-      if (year === undefined){
-          year = dateNow.getFullYear();
-      };
-      if (type === undefined){
-          type = "-"
-      }
-      const { _id } = req.user;
-
-      const user = await transactionModel
-        .find({
-          userOwner: _id,
-        })
-        .exec();
-
-      const filterUser = filterBalance(type, month, year, user)
-
-      res.status(200).send(filterUser);
-    } catch (error) {
-      console.log(error);
+    let { type, month, year } = req.query;
+    month = Number(month);
+    year = Number(year);
+    if (Number.isNaN(month) || Number.isNaN(year)) {
+      res
+        .status(400)
+        .send({ message: 'Bad request: month and year must be a number' });
     }
+    if (month > 12) {
+      res.status(400).send({ message: 'Bad request: uncorrect month' });
+    }
+    const dateNow = new Date();
+    if (month === undefined) {
+      month = dateNow.getMonth() + 1;
+    }
+    if (year === undefined) {
+      year = dateNow.getFullYear();
+    }
+    if (type === undefined) {
+      type = '-';
+    }
+    const { _id } = req.user;
+
+    const user = await transactionModel
+      .find({
+        userOwner: _id,
+      })
+      .exec();
+
+    const filterUser = filterBalance(type, month, year, user);
+
+    res.status(200).send(filterUser);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function postTransaction(req, res, next) {
@@ -120,7 +119,7 @@ async function postTransaction(req, res, next) {
         new: true,
       },
     );
-    const sendUser = [updatedUser, newTransaction._id]
+    const sendUser = [updatedUser, newTransaction._id];
     res.status(201).json(sendUser);
   } catch (error) {
     next(error);
@@ -289,81 +288,86 @@ async function updateTotalBalance(userId) {
   }, 0);
   return totalBalance;
 }
-function filterBalance(globalType, month, year, arr){
+function filterBalance(globalType, month, year, arr) {
   function unique(arr) {
-      let result = [];
-      let newResult = [];
-      arr.forEach(el => {if(!result.includes(el.join(','))) {
-          result.push(el.join(','))
-      }});
-      result.forEach(el => newResult.push(el.split(",")))
-      return newResult;
-  };
-  function getMonth (date){
-      const month = Number(date.slice(3,5));
-      return month
-  };
-  function getYear (date){
-      const year = Number(date.slice(6,10));
-      return year
-  };
-  function getBalanceAll (value) {
-      const ArrCategory = arr.filter(el => 
-          el.type === value &&
-          getMonth(el.date) === month &&
-          getYear(el.date) === year
-      );
-      return ArrCategory.reduce((acc, el) => {
-          return acc + el['sum']
-      }, 0)
-  };
-  function getBalanceArray (value) {
-      const ArrCategory = arr.filter(el => 
-          el.category === value[0] && el.type === value[1] &&
-          getMonth(el.date) === month &&
-          getYear(el.date) === year
-      );
-      return ArrCategory.reduce((acc, val) => {
-          if(value[1] === globalType) {
-              if(month === getMonth(val["date"]) && year === getYear(val["date"])){
-                  return acc + val['sum']
-              }
-          } else if("all" === globalType){
-              if(month === getMonth(val["date"]) && year === getYear(val["date"])){
-                  return acc + val['sum']
-              }
-          };
-          return acc + val['sum']
-      }, 0)
-  };
+    let result = [];
+    let newResult = [];
+    arr.forEach(el => {
+      if (!result.includes(el.join(','))) {
+        result.push(el.join(','));
+      }
+    });
+    result.forEach(el => newResult.push(el.split(',')));
+    return newResult;
+  }
+  function getMonth(date) {
+    const month = Number(date.slice(3, 5));
+    return month;
+  }
+  function getYear(date) {
+    const year = Number(date.slice(6, 10));
+    return year;
+  }
+  function getBalanceAll(value) {
+    const ArrCategory = arr.filter(
+      el =>
+        el.type === value &&
+        getMonth(el.date) === month &&
+        getYear(el.date) === year,
+    );
+    return ArrCategory.reduce((acc, el) => {
+      return acc + el['sum'];
+    }, 0);
+  }
+  function getBalanceArray(value) {
+    const ArrCategory = arr.filter(
+      el =>
+        el.category === value[0] &&
+        el.type === value[1] &&
+        getMonth(el.date) === month &&
+        getYear(el.date) === year,
+    );
+    return ArrCategory.reduce((acc, val) => {
+      if (value[1] === globalType) {
+        if (month === getMonth(val['date']) && year === getYear(val['date'])) {
+          return acc + val['sum'];
+        }
+      } else if ('all' === globalType) {
+        if (month === getMonth(val['date']) && year === getYear(val['date'])) {
+          return acc + val['sum'];
+        }
+      }
+      return acc + val['sum'];
+    }, 0);
+  }
   const category = arr.reduce((acc, val) => {
-      if(val.type === globalType) {
-          if(month === getMonth(val["date"]) && year === getYear(val["date"])){
-              acc.push([val.category, val.type])
-          }
-      } else if("all" === globalType){
-          if(month === getMonth(val["date"]) && year === getYear(val["date"])){
-              acc.push([val.category, val.type])
-          }
-      };
-      return unique(acc)
-  },[]);
+    if (val.type === globalType) {
+      if (month === getMonth(val['date']) && year === getYear(val['date'])) {
+        acc.push([val.category, val.type]);
+      }
+    } else if ('all' === globalType) {
+      if (month === getMonth(val['date']) && year === getYear(val['date'])) {
+        acc.push([val.category, val.type]);
+      }
+    }
+    return unique(acc);
+  }, []);
   const arrayCategory = category.reduce((acc, el) => {
-      acc.push({
-          "category": el[0],
-          "type": el[1],
-          "sum": getBalanceArray(el),
-      });
-      return acc
-  },[]);
-  const profit = getBalanceAll("+");
-  const exes = getBalanceAll("-");
+    acc.push({
+      category: el[0],
+      type: el[1],
+      sum: getBalanceArray(el),
+    });
+    return acc;
+  }, []);
+  const profit = getBalanceAll('+');
+  const exes = getBalanceAll('-');
   const finalObject = {
-      "arr": arrayCategory,
-      "income": profit,
-      "expenses": exes,
+    arr: arrayCategory,
+    income: profit,
+    expenses: exes,
   };
-  return finalObject
+  return finalObject;
 }
 
 module.exports = {
@@ -372,5 +376,5 @@ module.exports = {
   deleteTransaction,
   updateTransaction,
   getTransactionForStatistic,
-  getTransactionDateFillter
+  getTransactionDateFillter,
 };
