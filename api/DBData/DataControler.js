@@ -25,17 +25,21 @@ async function getTransactionDateFillter(req, res, next) {
             _id
         } = req.user;
 
-        const dateString = dateToString()
-
+        // const dateString = dateToString()
         const user = await transactionModel
             .find({
                 userOwner: _id,
             })
             .exec();
-        const userDateFilter = user.filter(el => {
-            return el.date === dateString
 
-        })
+        const userDateFilter = user.sort((a, b) => {
+            const stringA = a.date.split('/').reverse().join(',')
+            const stringB = b.date.split('/').reverse().join(' ')
+            let dateA = new Date(stringA)
+            let dateB = new Date(stringB)
+
+            return dateA - dateB
+        });
 
         res.status(200).send(userDateFilter);
     } catch (error) {
@@ -267,25 +271,25 @@ async function updateTotalBalance(userId) {
     return totalBalance;
 }
 
-function dateToString() {
+// function dateToString() {
 
-    const dateNow = new Date();
-    let month = dateNow.getMonth() + 1
-    if (month < 10) {
-        month = '0' + month
-    }
-    let year = dateNow.getFullYear()
-    let date = dateNow.getDate()
-    if (date < 10) {
-        date = '0' + date
-    }
-    const arr = []
-    arr.push(date)
-    arr.push(month)
-    arr.push(year)
-    const string = arr.join('/')
-    return string
-}
+//     const dateNow = new Date();
+//     let month = dateNow.getMonth() + 1
+//     if (month < 10) {
+//         month = '0' + month
+//     }
+//     let year = dateNow.getFullYear()
+//     let date = dateNow.getDate()
+//     if (date < 10) {
+//         date = '0' + date
+//     }
+//     const arr = []
+//     arr.push(date)
+//     arr.push(month)
+//     arr.push(year)
+//     const string = arr.join(' ')
+//     return string
+// }
 
 module.exports = {
     getTransaction,
