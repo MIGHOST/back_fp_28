@@ -83,11 +83,13 @@ async function postTransaction(req, res, next) {
         userOwner: _id,
       })
       .exec();
-      if (!user) {
-        res.status(404).send('Transactions not found');
-      }
-  
+
+    if (!user) {
+      res.status(404).send('Transactions not found');
+    }
+
     const lastUser = user[user.length - 1];
+
     if (!type) {
       res.status(400).send('Type of transaction missing');
     }
@@ -104,6 +106,7 @@ async function postTransaction(req, res, next) {
     };
 
     const newTransaction = await transactionModel.create(transaction);
+
     const totalUserBalance = await updateTotalBalance(_id);
 
     const updatedUser = await userModel.findByIdAndUpdate(
@@ -120,8 +123,8 @@ async function postTransaction(req, res, next) {
         new: true,
       },
     );
-    const sendUser = [updatedUser, newTransaction._id];
-    res.status(201).json(sendUser);
+
+    return res.status(201).json(updatedUser);
   } catch (error) {
     next(error);
   }
@@ -274,6 +277,7 @@ async function UpdateBalance(userId) {
     console.log(error);
   }
 }
+
 async function updateTotalBalance(userId) {
   const transactions = await transactionModel
     .find({ userOwner: userId })
@@ -289,6 +293,7 @@ async function updateTotalBalance(userId) {
   }, 0);
   return totalBalance;
 }
+
 function filterBalance(globalType, month, year, arr) {
   function unique(arr) {
     let result = [];
