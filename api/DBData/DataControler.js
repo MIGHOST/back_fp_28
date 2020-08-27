@@ -17,6 +17,46 @@ async function getTransaction(req, res, next) {
   }
 }
 
+async function getTransactionForStatistic(req, res) {
+    try {
+      let { type, month, year } = req.query;
+      month = Number(month);
+      year = Number(year);
+      if (Number.isNaN(month) || Number.isNaN(year)) {
+        res
+          .status(400)
+          .send({ message: 'Bad request: month and year must be a number' });
+      }
+      if (month > 12) {
+        res.status(400).send({ message: 'Bad request: uncorrect month' });
+      }
+      const dateNow = new Date();
+      if (month === undefined) {
+        month = dateNow.getMonth() + 1;
+      }
+      if (year === undefined) {
+        year = dateNow.getFullYear();
+      }
+      if (type === undefined) {
+        type = '-';
+      }
+      const { _id } = req.user;
+  
+      const user = await transactionModel
+        .find({
+          userOwner: _id,
+        })
+        .exec();
+  
+      const filterUser = filterBalance(type, month, year, user);
+  
+      res.status(200).send(filterUser);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 async function getTransactionDateFillter(req, res, next) {
   try {
     const { _id } = req.user;
