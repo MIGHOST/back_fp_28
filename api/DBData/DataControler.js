@@ -17,6 +17,40 @@ async function getTransaction(req, res, next) {
   }
 }
 
+async function getTransactionDateFillter(req, res, next) {
+  try {
+      const {
+          _id
+      } = req.user;
+            const user = await transactionModel
+          .find({
+              userOwner: _id,
+          })
+          .exec();
+
+      const userDateFilter = user.sort((a, b) => {
+          const stringA = a.date.split('/').reverse().join(',')
+          const stringB = b.date.split('/').reverse().join(' ')
+          let dateA = new Date(stringA)
+          let dateB = new Date(stringB)
+
+          return dateA - dateB
+      });
+
+      res.status(200).send(userDateFilter);
+  } catch (error) {
+      console.log(error);
+  }}
+
+
+
+
+
+
+
+
+
+
 async function getTransactionForStatistic(req, res) {
   try {
       let { type, month, year } = req.query;
@@ -86,8 +120,8 @@ async function postTransaction(req, res, next) {
         new: true,
       },
     );
-
-    res.status(201).json(updatedUser);
+    const sendUser = [updatedUser, newTransaction._id]
+    res.status(201).json(sendUser);
   } catch (error) {
     next(error);
   }
@@ -337,5 +371,6 @@ module.exports = {
   postTransaction,
   deleteTransaction,
   updateTransaction,
-  getTransactionForStatistic
+  getTransactionForStatistic,
+  getTransactionDateFillter
 };
