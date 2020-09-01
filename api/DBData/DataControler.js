@@ -56,7 +56,6 @@ async function getTransactionDateFillter(req, res, next) {
     console.log(error);
   }
 }
-
 async function getTransactionForStatistic(req, res) {
   try {
     let { type, month, year } = req.query;
