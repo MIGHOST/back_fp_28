@@ -1,5 +1,12 @@
 const transactionModel = require('./DataModel');
 const userModel = require('../user/user.model');
+const {
+  sortTransactions,
+  balanceLastTransaction,
+  updateTotalBalance,
+  filterBalance,
+  updateBalance,
+} = require('../helper/transactionController.helpers');
 
 async function getTransaction(req, res, next) {
   try {
@@ -11,11 +18,12 @@ async function getTransaction(req, res, next) {
       })
       .exec();
 
-    res.status(200).send(user);
+    return res.status(200).send(user);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 }
+
 async function getTransactionDateFillter(req, res, next) {
   try {
     const { _id } = req.user;
@@ -26,39 +34,29 @@ async function getTransactionDateFillter(req, res, next) {
       })
       .exec();
 
-    const userDateFilter = user.sort((a, b) => {
-      const stringA = a.date.split('/').reverse().join(',');
-      const stringB = b.date.split('/').reverse().join(' ');
-      let dateA = new Date(stringA);
-      let dateB = new Date(stringB);
+    const userDateSort = sortTransactions(user);
 
-      return dateA - dateB;
-    });
-
-    await UpdateBalance2(userDateFilter);
+    await updateBalance(userDateSort);
 
     const transactions = await transactionModel
       .find({
         userOwner: _id,
       })
       .exec();
-    transactions.sort((a, b) => {
-      const stringA = a.date.split('/').reverse().join(',');
-      const stringB = b.date.split('/').reverse().join(' ');
-      let dateA = new Date(stringA);
-      let dateB = new Date(stringB);
 
-      return dateA - dateB;
-    });
+    const userTransactionsSort = sortTransactions(transactions);
 
-    res.status(200).send(transactions);
+    res.status(200).send(userTransactionsSort);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 }
-async function getTransactionForStatistic(req, res) {
+
+async function getTransactionForStatistic(req, res, next) {
   try {
+    const { _id } = req.user;
     let { type, month, year } = req.query;
+
     month = Number(month);
     year = Number(year);
     if (Number.isNaN(month) || Number.isNaN(year)) {
@@ -69,17 +67,20 @@ async function getTransactionForStatistic(req, res) {
     if (month > 12) {
       res.status(400).send({ message: 'Bad request: uncorrect month' });
     }
+
     const dateNow = new Date();
+
     if (month === undefined) {
       month = dateNow.getMonth() + 1;
     }
+
     if (year === undefined) {
       year = dateNow.getFullYear();
     }
+
     if (type === undefined) {
       type = '-';
     }
-    const { _id } = req.user;
 
     const user = await transactionModel
       .find({
@@ -91,7 +92,7 @@ async function getTransactionForStatistic(req, res) {
 
     res.status(200).send(filterUser);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 }
 
@@ -201,8 +202,10 @@ async function updateTransaction(req, res, next) {
         new: true,
       },
     );
+
     const totalUserBalance = await updateTotalBalance(_id);
-    const updatedUser = await userModel.findByIdAndUpdate(
+
+    await userModel.findByIdAndUpdate(
       _id,
       {
         userBalance: totalUserBalance,
@@ -212,177 +215,12 @@ async function updateTransaction(req, res, next) {
       },
     );
 
-    res.status(200).send(transactionUpdate);
+    return res.status(200).send(transactionUpdate);
   } catch (error) {
-    console.log('Error', error);
+    next(error);
   }
 }
 
-function balanceLastTransaction(lastTransaction, type, sum) {
-  switch (type) {
-    case '+':
-      if (lastTransaction == undefined) {
-        return +sum;
-      }
-      return (lastTransaction.balance += sum);
-    case '-':
-      if (lastTransaction.balance === undefined) {
-        return -sum;
-      }
-      return (lastTransaction.balance -= sum);
-    default:
-      return console.log('not type');
-  }
-}
-
-async function updateTotalBalance(userId) {
-  const transactions = await transactionModel
-    .find({
-      userOwner: userId,
-    })
-    .exec();
-
-  const totalBalance = transactions.reduce((acc, transaction) => {
-    if (transaction.type === '-') {
-      acc -= transaction.sum;
-    } else {
-      acc += transaction.sum;
-    }
-    return acc;
-  }, 0);
-  return totalBalance;
-}
-
-function filterBalance(globalType, month, year, arr) {
-  function unique(arr) {
-    let result = [];
-    let newResult = [];
-    arr.forEach(el => {
-      if (!result.includes(el.join(','))) {
-        result.push(el.join(','));
-      }
-    });
-    result.forEach(el => newResult.push(el.split(',')));
-    return newResult;
-  }
-  function getMonth(date) {
-    const month = Number(date.slice(3, 5));
-    return month;
-  }
-  function getYear(date) {
-    const year = Number(date.slice(6, 10));
-    return year;
-  }
-  function getBalanceAll(value) {
-    const ArrCategory = arr.filter(
-      el =>
-        el.type === value &&
-        getMonth(el.date) === month &&
-        getYear(el.date) === year,
-    );
-    return ArrCategory.reduce((acc, el) => {
-      return acc + el['sum'];
-    }, 0);
-  }
-  function getBalanceArray(value) {
-    const ArrCategory = arr.filter(
-      el =>
-        el.category === value[0] &&
-        el.type === value[1] &&
-        getMonth(el.date) === month &&
-        getYear(el.date) === year,
-    );
-    return ArrCategory.reduce((acc, val) => {
-      if (value[1] === globalType) {
-        if (month === getMonth(val['date']) && year === getYear(val['date'])) {
-          return acc + val['sum'];
-        }
-      } else if ('all' === globalType) {
-        if (month === getMonth(val['date']) && year === getYear(val['date'])) {
-          return acc + val['sum'];
-        }
-      }
-      return acc + val['sum'];
-    }, 0);
-  }
-  const category = arr.reduce((acc, val) => {
-    if (val.type === globalType) {
-      if (month === getMonth(val['date']) && year === getYear(val['date'])) {
-        acc.push([val.category, val.type]);
-      }
-    } else if ('all' === globalType) {
-      if (month === getMonth(val['date']) && year === getYear(val['date'])) {
-        acc.push([val.category, val.type]);
-      }
-    }
-    return unique(acc);
-  }, []);
-  const arrayCategory = category.reduce((acc, el) => {
-    acc.push({
-      category: el[0],
-      type: el[1],
-      sum: getBalanceArray(el),
-    });
-    return acc;
-  }, []);
-  const profit = getBalanceAll('+');
-  const exes = getBalanceAll('-');
-  const finalObject = {
-    arr: arrayCategory,
-    income: profit,
-    expenses: exes,
-  };
-  return finalObject;
-}
-
-async function UpdateBalance2(arr) {
-  try {
-    arr.map(async el => {
-      const prev = arr.indexOf(el);
-
-      if (prev === 0) {
-        switch (el.type) {
-          case '+':
-            el.balance = 0 + el.sum;
-
-            const updateEl = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            console.log(updateEl);
-            return;
-          case '-':
-            el.balance = 0 - el.sum;
-            const updateE = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            console.log(updateE);
-            return;
-          default:
-            return console.log('not type');
-        }
-      } else {
-        switch (el.type) {
-          case '+':
-            arr[prev].balance = arr[prev - 1].balance += el.sum;
-            const updateEl1 = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            return;
-          case '-':
-            arr[prev].balance = arr[prev - 1].balance -= el.sum;
-            const updateEl2 = await transactionModel.findByIdAndUpdate(el._id, {
-              balance: el.balance,
-            });
-            return;
-          default:
-            return console.log('not type');
-        }
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-}
 module.exports = {
   getTransaction,
   postTransaction,
